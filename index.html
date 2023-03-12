@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title></title>
+		<link rel="stylesheet" href="https://orteil.dashnet.org/cookieclicker/beta/style.css">
+		<style>
+			input, textarea {text-align:center;padding:4px 8px;box-sizing:border-box;margin:8px 3px;width:30%}
+			body {overflow: scroll}
+		</style>
+	</head>
+	<body>
+		<div class="menu">
+			
+			Input code: <input id="giftCode" type="text" value="" placeholder=""/>
+			<a class="option smallFancyButton" style="width:auto;text-align:center;" id="decodeButton">Decode</a>
+			
+			<div class="line"></div>
+			
+			Raw code: <input type="text" id="rawText" disabled value="" /><br>
+			
+			<div class="line"></div>
+
+			Date of Creation: <input type="text" id="dateCreated" value="" /> Use JavaScript Date(string) format<br>
+			Cookies go bad on: <span id="expirationDate"></span><br>
+			Cookie amount: <input type="text" id="cookieAmount" value="1000" /> Game limits it to between 1 and 1000, inclusive<br>
+			Icon (Click to select icon):<br><canvas id="singleIcon"></canvas><br><canvas id="icon"></canvas><br>
+			Message: <textarea id="message">Lorem
+Ipsum
+Dolor
+Sit</textarea> Each line is limited to 25 characters, and limited to 4 lines in total<br>
+			
+			<div class="line"></div>
+			
+			Output code: <input style="width:50%" type="text" id="outputCode" disabled value="" />
+			<a class="option smallFancyButton" style="width:auto;text-align:center;" id="generateCodeButton">Generate code</a><br>
+
+		</div>
+		<script>
+			let c = document.getElementById('icon');
+			let ctx = c.getContext('2d');
+			let singleIcon = document.getElementById('singleIcon');
+			let itx = singleIcon.getContext('2d');
+
+			document.getElementById('dateCreated').value = new Date().toString();
+
+			singleIcon.width  = 48;
+			singleIcon.height = 48;
+			singleIcon.style.width  = '96px';
+			singleIcon.style.height = '96px';
+
+			function showExpirationDate() {
+				document.getElementById('expirationDate').innerHTML = new Date(parseInt(data[1]) + 2 * 60 * 60 * 24 * 1000).toString();
+			}
+			document.getElementById('expirationDate').addEventListener('change',showExpirationDate);
+
+			let data = [];
+
+			// Select icon
+			function selectIcon(coords) {
+
+				// Clear single icon
+				itx.clearRect(0,0,singleIcon.width,singleIcon.height);
+
+				// Draw icon sheet
+				ctx.clearRect(0,0,c.width,c.height);
+				ctx.drawImage(icons,0,0,icons.width / 2,icons.height / 2);
+				ctx.strokeStyle = 'magenta';
+
+				// Make sure argument is supplied
+				if (coords) {
+					// Draw magenta lines
+					data[3] = coords.join(' ');
+					ctx.strokeRect(coords[0]*24,coords[1]*24,24,24);
+					ctx.strokeRect(coords[0]*24,-20,24,c.height+40);
+					ctx.strokeRect(-20,coords[1]*24,c.width+40,24);
+
+					// Draw icon for the single icon canvas
+					itx.drawImage(icons,coords[0]*-48,coords[1]*-48)
+				}
+			}
+			let icons = new Image();
+			icons.src = 'https://orteil.dashnet.org/cookieclicker/beta/img/icons.png';
+			icons.addEventListener('load',()=>{
+				c.width  = icons.width / 2;
+				c.height = icons.height / 2;
+
+				c.style.width  = `${icons.width / 2} px`;
+				c.style.height = `${icons.height / 2} px`;
+
+				selectIcon();
+			});
+
+			// Handle click
+			let clicking = false;
+			let click = e => {
+				let bcr = c.getBoundingClientRect();
+				selectIcon([Math.floor((e.clientX - bcr.left) / 24),Math.floor((e.clientY - bcr.top) / 24)])
+			}
+			c.addEventListener('mousedown',e=>{clicking=true;click(e);});
+			c.addEventListener('mousemove',e=>{if (clicking) click(e)});
+			c.addEventListener('mouseup',()=>{clicking=false});
+
+
+
+			// Encode string
+			function utf8_to_b64(str) {
+				try{return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+					return String.fromCharCode(parseInt(p1, 16))
+				}));}
+				catch(err)
+				{return '';}
+			}
+
+			// Decode string
+			function b64_to_utf8(str) {
+				try{return decodeURIComponent(Array.prototype.map.call(atob(str), function(c) {
+					return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+				}).join(''));}
+				catch(err)
+				{return '';}
+			}
+
+
+			
+
+
+			// Decode the entered code and display the data
+			function decode() {
+				let code = document.getElementById('giftCode').value;
+				let str = b64_to_utf8(code);
+				data = str.split('|');
+
+				showExpirationDate();
+
+				document.getElementById('rawText').value = str;
+				document.getElementById('dateCreated').value = new Date(parseInt(data[1])).toString();
+				document.getElementById('cookieAmount').value = data[2];
+				selectIcon(data[3].split(' '));
+				document.getElementById('message').innerHTML = data[4];
+			}
+			document.getElementById('decodeButton').addEventListener('click',decode);
+
+
+
+			// Generate a gift code
+			function encode() {
+				data[0] = 'MAIL';
+				data[1] = new Date(document.getElementById('dateCreated').value).getTime();
+				data[2] = document.getElementById('cookieAmount').value;
+				data[4] = document.getElementById('message').value;
+
+				document.getElementById('outputCode').value = utf8_to_b64(data.join('|'));
+			}
+			document.getElementById('generateCodeButton').addEventListener('click',encode);
+
+
+		</script>
+	</body>
+</html>
