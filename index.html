@@ -9,10 +9,19 @@
 		<style>
 			input, textarea {text-align:center;padding:4px 8px;box-sizing:border-box;margin:8px 3px;width:30%}
 			body {overflow: scroll}
+			.framed {margin: 0;padding: 0}
 		</style>
 	</head>
 	<body>
 		<div class="menu">
+			ABOUT:<br>
+			<br>
+			This site decodes and re-encodes gift codes from <a target="_blank" href="https://orteil.dashnet.org/cookieclicker">Cookie Clicker🡕</a>. Now you may be thinking, "Gift codes? In Cookie Clicker?". That's because, as of March 2023, they're exclusive to the <a target="_blank" href="https://orteil.dashnet.org/cookieclicker/beta">beta🡕</a>.<br><br>
+			Most of the parameters are clamped when they're imported into the game, which is better than straight up rejecting a code with, for example, too many cookies. I was hoping it would say something funny for codes generated on a future date, but Orteil just made it so you can redeem codes that were generated up to 2 days in the future, much like how codes expire after 2 days.<br><br>
+			The one thing that isn't clamped is the icon. You can select any icon in the game for a gift. That's why I went all out on a selector for it. You can get rather creative with the icons, given that you can put any text you want to go along with it.<br><br>
+			Have fun, love you!
+
+			<div class="line"></div>
 			
 			Input code: <input id="giftCode" type="text" value="" placeholder=""/>
 			<a class="option smallFancyButton" style="width:auto;text-align:center;" id="decodeButton">Decode</a>
@@ -23,14 +32,11 @@
 			
 			<div class="line"></div>
 
-			Date of Creation: <input type="text" id="dateCreated" value="" /> Use JavaScript Date(string) format<br>
+			Date of Creation: <input type="text" id="dateCreated" value="" /> Use <a href="https://www.w3schools.com/js/js_date_formats.asp" target="_blank">JavaScript Date(string) format🡕</a><br>
 			Cookies go bad on: <span id="expirationDate"></span><br>
 			Cookie amount: <input type="text" id="cookieAmount" value="1000" /> Game limits it to between 1 and 1000, inclusive<br>
-			Icon (Click to select icon):<br><canvas id="singleIcon"></canvas><br><canvas id="icon"></canvas><br>
-			Message: <textarea id="message">Lorem
-Ipsum
-Dolor
-Sit</textarea> Each line is limited to 25 characters, and limited to 4 lines in total<br>
+			Icon (Click the big grid to select an icon):<br><canvas class="framed" id="singleIcon"></canvas><br><canvas class="framed" id="icon"></canvas><br>
+			Message: <textarea id="message">Here's some cookies!</textarea> <span id="messageLore">Each line is limited to 25 characters, and limited to 4 lines in total</span><br>
 			
 			<div class="line"></div>
 			
@@ -45,6 +51,23 @@ Sit</textarea> Each line is limited to 25 characters, and limited to 4 lines in 
 			let itx = singleIcon.getContext('2d');
 
 			document.getElementById('dateCreated').value = new Date().toString();
+
+			// Color red if bad
+			document.getElementById('message').addEventListener('keyup',e=>{
+				let str = e.srcElement.value;
+				let msg = str.split('\n');
+				let bad = false;
+				if (msg.length > 4)
+					bad = true;
+				msg.forEach(s=>{
+					if (s.length > 25)
+						bad = true;
+				});
+				if (bad)
+					document.getElementById('messageLore').style.color = 'red';
+				else
+					document.getElementById('messageLore').style.color = 'inherit';
+			});
 
 			singleIcon.width  = 48;
 			singleIcon.height = 48;
@@ -97,7 +120,7 @@ Sit</textarea> Each line is limited to 25 characters, and limited to 4 lines in 
 			let clicking = false;
 			let click = e => {
 				let bcr = c.getBoundingClientRect();
-				selectIcon([Math.floor((e.clientX - bcr.left) / 24),Math.floor((e.clientY - bcr.top) / 24)])
+				selectIcon([Math.floor((e.clientX - bcr.left - 3/*offset for border :(*/) / 24),Math.floor((e.clientY - bcr.top - 3/*offset for border :(*/) / 24)])
 			}
 			c.addEventListener('mousedown',e=>{clicking=true;click(e);});
 			c.addEventListener('mousemove',e=>{if (clicking) click(e)});
